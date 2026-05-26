@@ -8,6 +8,7 @@
 export interface ServiceCfg {
   type: string;
   baseUrl: string;
+  name?: string;
   apiKey?: string;
   username?: string;
   password?: string;
@@ -66,13 +67,28 @@ function configError(path: string, message: string): never {
   throw new Error(`[config] ${message}. Set DEMO=true for mock data, or mount a valid config file at ${path}.`);
 }
 
+function configPath(): string {
+  return getEnv("CONFIG_PATH") ?? "/app/config.json";
+}
+
+export function resetConfigCache() {
+  cached = undefined;
+}
+
+export function getConfigPath(): string {
+  return configPath();
+}
+
+export function getDemoRequested(): boolean {
+  return isTruthyEnv(getEnv("DEMO")) || isTruthyEnv(getEnv("DEMO_MODE"));
+}
+
 let cached: AppConfig | undefined;
 export function getConfig(): AppConfig {
   if (cached) return cached;
 
-  const path = getEnv("CONFIG_PATH") ?? "/app/config.json";
-  const demoRequested = isTruthyEnv(getEnv("DEMO")) || isTruthyEnv(getEnv("DEMO_MODE"));
-  if (demoRequested) {
+  const path = configPath();
+  if (getDemoRequested()) {
     cached = DEMO;
     return cached;
   }

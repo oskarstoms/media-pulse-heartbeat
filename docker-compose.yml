@@ -8,7 +8,7 @@ services:
     network_mode: host
     volumes:
       # Edit ./config.json on the host — no rebuild needed, just restart.
-      - ./config.json:/app/config.json:ro
+      - ./config.json:/app/config.json
 
   # Optional: host metrics. Run this on EACH server you want CPU/RAM/disk for,
   # then point `glancesUrl` in config.json at it (e.g. http://server-alpha:61208/api/4).

@@ -37,7 +37,17 @@ function makeHost(seed: number): HostStats {
 }
 
 function svc(id: string, name: string, icon: string, health: ServiceStatus["health"], stats: ServiceStatus["stats"], issues: ServiceStatus["issues"] = []): ServiceStatus {
-  return { id, name, icon, health, stats, issues, responseMs: Math.floor(20 + Math.random() * 180) };
+  return {
+    id,
+    name,
+    icon,
+    health,
+    stats,
+    issues,
+    responseMs: Math.floor(20 + Math.random() * 180),
+    uptimeSeconds: 60 * 60 * (24 + Math.floor(Math.random() * 500)),
+    container: { name: id, state: "running", status: "Up" },
+  };
 }
 
 function makeServices(seed: number): ServiceStatus[] {

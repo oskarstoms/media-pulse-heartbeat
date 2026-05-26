@@ -19,10 +19,17 @@ export interface ServiceStatus {
   issues: ServiceIssue[];
   /** ms */
   responseMs?: number;
+  uptimeSeconds?: number;
+  container?: {
+    name: string;
+    state: string;
+    status: string;
+  };
 }
 
 export interface HostStats {
   uptimeSeconds: number;
+  rebootRequired?: boolean | null;
   cpuPercent: number;
   memUsedGb: number;
   memTotalGb: number;

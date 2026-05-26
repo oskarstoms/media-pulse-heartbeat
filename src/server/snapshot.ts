@@ -36,6 +36,10 @@ function serviceName(type: string): string {
   return names[type] ?? type;
 }
 
+function displayName(s: ServiceCfg): string {
+  return s.name?.trim() || serviceName(s.type);
+}
+
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> {
   const r = await safeFetch(url, init);
   if (!r || !r.ok) return null;
@@ -44,7 +48,7 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> 
 
 async function fetchArrService(s: ServiceCfg, apiPath: string): Promise<ServiceStatus> {
   const baseId = s.type;
-  const name = serviceName(baseId);
+  const name = displayName(s);
   const headers = { "X-Api-Key": s.apiKey ?? "" };
   const [queue, health] = await Promise.all([
     fetchJson<{ totalCount?: number; records?: unknown[] }>(`${s.baseUrl}${apiPath}/queue?pageSize=1`, { headers }),
@@ -74,7 +78,7 @@ async function fetchJellyfin(s: ServiceCfg): Promise<ServiceStatus> {
   });
   const reachable = sessions !== null;
   return {
-    id: "jellyfin", name: "Jellyfin", icon: "play-circle",
+    id: "jellyfin", name: displayName(s), icon: "play-circle",
     health: reachable ? "up" : "down",
     stats: [{ label: "Streams", value: reachable ? String(sessions?.length ?? 0) : "?" }],
     issues: [],
@@ -87,7 +91,7 @@ async function fetchJellyseerr(s: ServiceCfg): Promise<ServiceStatus> {
   });
   const reachable = status !== null;
   return {
-    id: "jellyseerr", name: "Jellyseerr", icon: "ticket",
+    id: "jellyseerr", name: displayName(s), icon: "ticket",
     health: reachable ? "up" : "down",
     stats: [{ label: "Version", value: status?.version ?? "?" }],
     issues: reachable ? [] : [{ level: "error", message: "Jellyseerr API did not respond" }],
@@ -97,7 +101,7 @@ async function fetchJellyseerr(s: ServiceCfg): Promise<ServiceStatus> {
 async function fetchQbittorrent(s: ServiceCfg): Promise<ServiceStatus> {
   if (!s.username || !s.password) {
     return {
-      id: "qbittorrent", name: "qBittorrent", icon: "download", health: "unknown",
+      id: "qbittorrent", name: displayName(s), icon: "download", health: "unknown",
       stats: [{ label: "Auth", value: "missing credentials" }],
       issues: [{ level: "warning", message: "qBittorrent username/password are not configured" }],
     };
@@ -112,7 +116,7 @@ async function fetchQbittorrent(s: ServiceCfg): Promise<ServiceStatus> {
   const cookie = login?.headers.get("set-cookie")?.split(";")[0];
   if (!login?.ok || !cookie) {
     return {
-      id: "qbittorrent", name: "qBittorrent", icon: "download", health: "down",
+      id: "qbittorrent", name: displayName(s), icon: "download", health: "down",
       stats: [{ label: "Auth", value: "failed" }],
       issues: [{ level: "error", message: "qBittorrent login failed" }],
     };
@@ -125,7 +129,7 @@ async function fetchQbittorrent(s: ServiceCfg): Promise<ServiceStatus> {
   ]);
   const active = (torrents ?? []).filter((t) => /(downloading|uploading|stalled|queued)/i.test(t.state ?? "")).length;
   return {
-    id: "qbittorrent", name: "qBittorrent", icon: "download",
+    id: "qbittorrent", name: displayName(s), icon: "download",
     health: transfer || torrents ? "up" : "degraded",
     stats: [
       { label: "Torrents", value: torrents ? String(torrents.length) : "?" },
@@ -140,7 +144,7 @@ async function fetchFlaresolverr(s: ServiceCfg): Promise<ServiceStatus> {
   const r = await safeFetch(`${s.baseUrl}/health`);
   const ok = !!r && r.ok;
   return {
-    id: "flaresolverr", name: "Flaresolverr", icon: "shield",
+    id: "flaresolverr", name: displayName(s), icon: "shield",
     health: ok ? "up" : "down",
     stats: [{ label: "Endpoint", value: ok ? "responding" : "no response" }],
     issues: ok ? [] : [{ level: "error", message: "Flaresolverr did not respond" }],
@@ -156,7 +160,7 @@ async function fetchPortainer(s: ServiceCfg): Promise<ServiceStatus> {
   const reachable = status !== null || endpoints !== null;
   const down = (endpoints ?? []).filter((e) => e.Status && e.Status !== 1);
   return {
-    id: "portainer", name: "Portainer", icon: "boxes",
+    id: "portainer", name: displayName(s), icon: "boxes",
     health: !reachable ? "down" : down.length ? "degraded" : "up",
     stats: [
       { label: "Version", value: status?.Version ?? "?" },
@@ -174,7 +178,7 @@ async function fetchCloudflared(s: ServiceCfg): Promise<ServiceStatus> {
   const connected = Number(text.match(/cloudflared_tunnel_total_requests(?:\{[^}]*\})?\s+(\d+(?:\.\d+)?)/)?.[1] ?? NaN);
   const ok = !!r && r.ok;
   return {
-    id: "cloudflared", name: "Cloudflared", icon: "cloud",
+    id: "cloudflared", name: displayName(s), icon: "cloud",
     health: ok ? "up" : "down",
     stats: [
       { label: "Metrics", value: ok ? "responding" : "no response" },
@@ -188,7 +192,7 @@ async function fetchGeneric(s: ServiceCfg): Promise<ServiceStatus> {
   const r = await safeFetch(s.baseUrl);
   const ok = !!r && (r.ok || r.status === 401);
   return {
-    id: s.type, name: serviceName(s.type), icon: "box",
+    id: s.type, name: displayName(s), icon: "box",
     health: ok ? "up" : "down",
     stats: [{ label: "Endpoint", value: ok ? "reachable" : "no response" }],
     issues: ok ? [] : [{ level: "error", message: `${s.type} not reachable` }],
@@ -220,6 +224,26 @@ interface GlancesData {
   docker?: Array<{ status?: string }>;
   containers?: Array<{ status?: string }>;
   uptime?: number | string;
+}
+
+interface PortainerEndpoint {
+  Id?: number;
+  Name?: string;
+  Status?: number;
+}
+
+interface PortainerContainer {
+  Names?: string[];
+  State?: string;
+  Status?: string;
+  Created?: number;
+}
+
+interface ContainerSummary {
+  name: string;
+  state: string;
+  status: string;
+  uptimeSeconds?: number;
 }
 
 const previousNetwork = new Map<string, { ts: number; rx: number; tx: number }>();
@@ -258,6 +282,101 @@ function containerStats(data: GlancesData): HostStats["containers"] {
   };
 }
 
+function normalizeName(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function serviceAliases(type: string): string[] {
+  const aliases: Record<string, string[]> = {
+    declutarr: ["declutarr", "decluttarr"],
+    qbittorrent: ["qbittorrent", "qbittorrentvpn"],
+    cloudflared: ["cloudflared"],
+  };
+  return aliases[type] ?? [type];
+}
+
+function findContainer(type: string, containers: ContainerSummary[]): ContainerSummary | undefined {
+  const aliases = serviceAliases(type).map(normalizeName);
+  return containers.find((container) => {
+    const name = normalizeName(container.name);
+    return aliases.some((alias) => name.includes(alias) || alias.includes(name));
+  });
+}
+
+async function fetchPortainerContainers(cfg: ServerCfg): Promise<ContainerSummary[]> {
+  const portainer = cfg.services.find((s) => s.type === "portainer" && s.apiKey);
+  if (!portainer) return [];
+  const headers = { "X-API-Key": portainer.apiKey ?? "" };
+  const endpoints = await fetchJson<PortainerEndpoint[]>(`${portainer.baseUrl}/api/endpoints`, { headers });
+  const endpointId = endpoints?.find((e) => e.Status === 1)?.Id ?? endpoints?.[0]?.Id;
+  if (!endpointId) return [];
+  const containers = await fetchJson<PortainerContainer[]>(
+    `${portainer.baseUrl}/api/endpoints/${endpointId}/docker/containers/json?all=true`,
+    { headers },
+  );
+  const nowSeconds = Date.now() / 1000;
+  return (containers ?? []).map((container) => {
+    const name = (container.Names?.[0] ?? "unknown").replace(/^\//, "");
+    const created = container.Created ?? 0;
+    return {
+      name,
+      state: container.State ?? "unknown",
+      status: container.Status ?? "unknown",
+      uptimeSeconds: created > 0 ? Math.max(0, Math.floor(nowSeconds - created)) : undefined,
+    };
+  });
+}
+
+function withContainerFallback(service: ServiceStatus, cfg: ServiceCfg, containers: ContainerSummary[]): ServiceStatus {
+  const container = findContainer(cfg.type, containers);
+  if (!container) return service;
+  const running = container.state === "running";
+  const containerStatus = {
+    name: container.name,
+    state: container.state,
+    status: container.status,
+  };
+  const stats = [
+    ...service.stats.filter((s) => s.label !== "Container" && s.label !== "Uptime"),
+    { label: "Container", value: container.status },
+  ];
+  if (container.uptimeSeconds) stats.push({ label: "Uptime", value: formatUptime(container.uptimeSeconds) });
+  if (service.health === "down" && running) {
+    return {
+      ...service,
+      health: "up",
+      stats,
+      issues: [],
+      uptimeSeconds: container.uptimeSeconds,
+      container: containerStatus,
+    };
+  }
+  if (!running) {
+    return {
+      ...service,
+      health: "down",
+      stats,
+      issues: [{ level: "error", message: `Container ${container.name} is ${container.status}` }],
+      uptimeSeconds: container.uptimeSeconds,
+      container: containerStatus,
+    };
+  }
+  return {
+    ...service,
+    stats,
+    uptimeSeconds: container.uptimeSeconds,
+    container: containerStatus,
+  };
+}
+
+function formatUptime(seconds: number): string {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h`;
+  return `${Math.floor(seconds / 60)}m`;
+}
+
 async function fetchHost(glancesUrl: string): Promise<HostStats | null> {
   const data = await fetchJson<GlancesData>(`${glancesUrl}/all`);
   if (!data) return null;
@@ -265,6 +384,7 @@ async function fetchHost(glancesUrl: string): Promise<HostStats | null> {
   const usedB = data.mem?.used ?? 0;
   return {
     uptimeSeconds: typeof data.uptime === "number" ? data.uptime : 0,
+    rebootRequired: null,
     cpuPercent: +(data.cpu?.total ?? 0).toFixed(1),
     memUsedGb: +(usedB / 1024 ** 3).toFixed(1),
     memTotalGb: +(totalB / 1024 ** 3).toFixed(1),
@@ -281,10 +401,12 @@ async function fetchHost(glancesUrl: string): Promise<HostStats | null> {
 }
 
 async function fetchServer(cfg: ServerCfg): Promise<ServerSnapshot> {
-  const [host, services] = await Promise.all([
+  const [host, rawServices, containers] = await Promise.all([
     cfg.glancesUrl ? fetchHost(cfg.glancesUrl) : Promise.resolve(null),
     Promise.all(cfg.services.map(fetchService)),
+    fetchPortainerContainers(cfg),
   ]);
+  const services = rawServices.map((service, idx) => withContainerFallback(service, cfg.services[idx], containers));
   return {
     id: cfg.id,
     name: cfg.name,

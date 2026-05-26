@@ -1,6 +1,6 @@
 import { Link, Outlet, redirect, createFileRoute, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Activity, FileText, Settings as SettingsIcon, LayoutDashboard, LogOut } from "lucide-react";
+import { Activity, Settings as SettingsIcon, LayoutDashboard, LogOut } from "lucide-react";
 
 import { getAuthState, logout } from "@/server-fns";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,6 @@ function AppLayout() {
           </div>
           <nav className="flex items-center gap-1 text-sm">
             <NavItem to="/" icon={<LayoutDashboard className="h-4 w-4" />} label="Overview" exact />
-            <NavItem to="/logs" icon={<FileText className="h-4 w-4" />} label="Logs" />
             <NavItem to="/settings" icon={<SettingsIcon className="h-4 w-4" />} label="Settings" />
           </nav>
           <div className="ml-auto flex items-center gap-3">
