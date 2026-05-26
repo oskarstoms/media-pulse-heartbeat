@@ -19,9 +19,11 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const mut = useMutation({
-    mutationFn: (pw: string) => login({ data: { password: pw } }) as Promise<{ ok: boolean; error?: string }>,
+    mutationFn: (vars: { username: string; password: string }) =>
+      login({ data: vars }) as Promise<{ ok: boolean; error?: string }>,
     onSuccess: (res) => {
       if (res.ok) router.navigate({ to: "/" });
     },
@@ -40,14 +42,26 @@ function LoginPage() {
         <CardContent>
           <form
             className="space-y-4"
-            onSubmit={(e) => { e.preventDefault(); mut.mutate(password); }}
+            onSubmit={(e) => { e.preventDefault(); mut.mutate({ username, password }); }}
           >
+            <div className="space-y-2">
+              <Label htmlFor="user">Username</Label>
+              <Input
+                id="user"
+                type="text"
+                autoFocus
+                autoComplete="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="admin"
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="pw">Password</Label>
               <Input
                 id="pw"
                 type="password"
-                autoFocus
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -56,11 +70,11 @@ function LoginPage() {
             {mut.data && !mut.data.ok && (
               <p className="text-sm text-rose-500">{mut.data.error}</p>
             )}
-            <Button type="submit" className="w-full" disabled={mut.isPending || !password}>
+            <Button type="submit" className="w-full" disabled={mut.isPending || !username || !password}>
               {mut.isPending ? "Signing in…" : "Sign in"}
             </Button>
             <p className="text-center text-xs text-muted-foreground">
-              Demo password: <code className="rounded bg-muted px-1">demo</code>
+              Demo credentials: <code className="rounded bg-muted px-1">admin</code> / <code className="rounded bg-muted px-1">demo</code>
             </p>
           </form>
         </CardContent>
