@@ -44,13 +44,15 @@ export function getConfig(): AppConfig {
   if (cached) return cached;
 
   const passwordHash = getEnv("APP_PASSWORD_HASH");
+  const username = getEnv("APP_USERNAME") ?? "admin";
   const sessionSecret = getEnv("SESSION_SECRET") ?? "lovable-homelab-dev-secret-change-me";
   const configJson = getEnv("CONFIG_JSON");
 
   if (!passwordHash || !configJson) {
-    // Demo mode: default password is "demo" → sha256
+    // Demo mode: default credentials are admin / demo
     cached = {
       demo: true,
+      username: "admin",
       passwordHash: "2a97516c354b68848cdbd8f54a226a0a55b21ed138e207ad6c5cbb9c00aa5aea",
       sessionSecret,
       servers: [
@@ -64,6 +66,7 @@ export function getConfig(): AppConfig {
   const parsed = JSON.parse(configJson) as { servers: ServerCfg[] };
   cached = {
     demo: false,
+    username,
     passwordHash,
     sessionSecret,
     servers: parsed.servers ?? [],
