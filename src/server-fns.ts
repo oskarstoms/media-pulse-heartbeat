@@ -2,10 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
-import { buildSnapshot } from "./snapshot";
-import { buildDemoLogs } from "../lib/demo-data";
-import { getConfig } from "./config";
-import { buildSetCookie, checkPassword, COOKIE_NAME, makeSessionToken, parseCookie, verifySessionToken } from "./auth";
+import { buildSnapshot } from "./server/snapshot";
+import { buildDemoLogs } from "./lib/demo-data";
+import { getConfig } from "./server/config";
+import { buildSetCookie, checkPassword, COOKIE_NAME, makeSessionToken, parseCookie, verifySessionToken } from "./server/auth";
 
 async function isAuthed(): Promise<boolean> {
   const cfg = getConfig();
