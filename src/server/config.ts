@@ -21,6 +21,7 @@ export interface ServerCfg {
 
 export interface AppConfig {
   demo: boolean;
+  username: string;
   passwordHash: string; // sha256 hex of password
   sessionSecret: string;
   servers: ServerCfg[];
