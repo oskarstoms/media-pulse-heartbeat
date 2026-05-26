@@ -377,21 +377,48 @@ function formatUptime(seconds: number): string {
   return `${Math.floor(seconds / 60)}m`;
 }
 
+function parseUptimeSeconds(value: number | string | undefined): number {
+  if (typeof value === "number") return value;
+  if (!value) return 0;
+  const text = value.toLowerCase();
+  const dayMatch = text.match(/(\d+)\s+day/);
+  const timeMatch = text.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+  const days = dayMatch ? Number(dayMatch[1]) : 0;
+  const hours = timeMatch ? Number(timeMatch[1]) : 0;
+  const minutes = timeMatch ? Number(timeMatch[2]) : 0;
+  const seconds = timeMatch ? Number(timeMatch[3]) : 0;
+  return days * 86400 + hours * 3600 + minutes * 60 + seconds;
+}
+
+function isUsefulMount(mount: string): boolean {
+  if (!mount || !mount.startsWith("/")) return false;
+  if (mount.startsWith("/etc/")) return false;
+  if (mount.startsWith("/proc") || mount.startsWith("/sys") || mount.startsWith("/dev")) return false;
+  if (mount.startsWith("/run") || mount.startsWith("/var/run")) return false;
+  return true;
+}
+
+function displayMount(mount: string): string {
+  if (mount === "/host") return "/";
+  if (mount.startsWith("/host/")) return mount.slice("/host".length);
+  return mount;
+}
+
 async function fetchHost(glancesUrl: string): Promise<HostStats | null> {
   const data = await fetchJson<GlancesData>(`${glancesUrl}/all`);
   if (!data) return null;
   const totalB = data.mem?.total ?? 0;
   const usedB = data.mem?.used ?? 0;
   return {
-    uptimeSeconds: typeof data.uptime === "number" ? data.uptime : 0,
+    uptimeSeconds: parseUptimeSeconds(data.uptime),
     rebootRequired: null,
     cpuPercent: +(data.cpu?.total ?? 0).toFixed(1),
     memUsedGb: +(usedB / 1024 ** 3).toFixed(1),
     memTotalGb: +(totalB / 1024 ** 3).toFixed(1),
     swapPercent: +(data.memswap?.percent ?? 0).toFixed(1),
     loadAvg: [data.load?.min1 ?? 0, data.load?.min5 ?? 0, data.load?.min15 ?? 0],
-    disks: (data.fs ?? []).slice(0, 5).map((f) => ({
-      mount: f.mnt_point,
+    disks: (data.fs ?? []).filter((f) => isUsefulMount(f.mnt_point)).slice(0, 5).map((f) => ({
+      mount: displayMount(f.mnt_point),
       usedGb: +(f.used / 1024 ** 3).toFixed(1),
       totalGb: +(f.size / 1024 ** 3).toFixed(1),
     })),
