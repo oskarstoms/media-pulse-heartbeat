@@ -5,7 +5,7 @@ import { z } from "zod";
 import { buildSnapshot } from "./server/snapshot";
 import { buildDemoLogs } from "./lib/demo-data";
 import { getConfig } from "./server/config";
-import { buildSetCookie, checkPassword, COOKIE_NAME, makeSessionToken, parseCookie, verifySessionToken } from "./server/auth";
+import { buildSetCookie, checkCredentials, COOKIE_NAME, makeSessionToken, parseCookie, verifySessionToken } from "./server/auth";
 
 async function isAuthed(): Promise<boolean> {
   const cfg = getConfig();
@@ -59,10 +59,10 @@ function maskUrl(u: string) {
 }
 
 export const login = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ password: z.string().min(1).max(256) }))
+  .inputValidator(z.object({ username: z.string().min(1).max(128), password: z.string().min(1).max(256) }))
   .handler(async ({ data }) => {
-    const ok = await checkPassword(data.password);
-    if (!ok) return { ok: false as const, error: "Incorrect password" };
+    const ok = await checkCredentials(data.username, data.password);
+    if (!ok) return { ok: false as const, error: "Incorrect username or password" };
     const token = await makeSessionToken();
     setResponseHeader("Set-Cookie", buildSetCookie(token, 7 * 24 * 60 * 60));
     return { ok: true as const };

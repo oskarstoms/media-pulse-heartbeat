@@ -20,8 +20,9 @@ async function hmacHex(secret: string, msg: string): Promise<string> {
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function checkPassword(password: string): Promise<boolean> {
+export async function checkCredentials(username: string, password: string): Promise<boolean> {
   const cfg = getConfig();
+  if (username !== cfg.username) return false;
   const h = await sha256Hex(password);
   return h === cfg.passwordHash.toLowerCase();
 }
