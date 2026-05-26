@@ -21,7 +21,7 @@ function LoginPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const mut = useMutation({
-    mutationFn: (pw: string) => login({ data: { password: pw } }),
+    mutationFn: (pw: string) => login({ data: { password: pw } }) as Promise<{ ok: boolean; error?: string }>,
     onSuccess: (res) => {
       if (res.ok) router.navigate({ to: "/" });
     },
