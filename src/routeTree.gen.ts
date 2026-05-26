@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppLogsRouteImport } from './routes/_app/logs'
 import { Route as AppServerIdRouteImport } from './routes/_app/server.$id'
 
 const LoginRoute = LoginRouteImport.update({
@@ -28,6 +29,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLogsRoute = AppLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppServerIdRoute = AppServerIdRouteImport.update({
   id: '/server/$id',
   path: '/server/$id',
@@ -37,10 +43,12 @@ const AppServerIdRoute = AppServerIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
+  '/logs': typeof AppLogsRoute
   '/server/$id': typeof AppServerIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/logs': typeof AppLogsRoute
   '/': typeof AppIndexRoute
   '/server/$id': typeof AppServerIdRoute
 }
@@ -48,15 +56,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/logs': typeof AppLogsRoute
   '/_app/': typeof AppIndexRoute
   '/_app/server/$id': typeof AppServerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/server/$id'
+  fullPaths: '/' | '/login' | '/logs' | '/server/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/' | '/server/$id'
-  id: '__root__' | '/_app' | '/login' | '/_app/' | '/_app/server/$id'
+  to: '/login' | '/logs' | '/' | '/server/$id'
+  id:
+    | '__root__'
+    | '/_app'
+    | '/login'
+    | '/_app/logs'
+    | '/_app/'
+    | '/_app/server/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -87,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/logs': {
+      id: '/_app/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof AppLogsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/server/$id': {
       id: '/_app/server/$id'
       path: '/server/$id'
@@ -98,11 +120,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppLogsRoute: typeof AppLogsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppServerIdRoute: typeof AppServerIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppLogsRoute: AppLogsRoute,
   AppIndexRoute: AppIndexRoute,
   AppServerIdRoute: AppServerIdRoute,
 }
