@@ -10,7 +10,7 @@ import { buildSetCookie, checkPassword, COOKIE_NAME, makeSessionToken, parseCook
 async function isAuthed(): Promise<boolean> {
   const cfg = getConfig();
   if (cfg.demo) return true; // demo mode: no auth required
-  const req = getWebRequest();
+  const req = getRequest();
   const cookie = req?.headers.get("cookie");
   const token = parseCookie(cookie, COOKIE_NAME);
   return await verifySessionToken(token);
