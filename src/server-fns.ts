@@ -59,10 +59,10 @@ function maskUrl(u: string) {
 }
 
 export const login = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ password: z.string().min(1).max(256) }))
+  .inputValidator(z.object({ username: z.string().min(1).max(128), password: z.string().min(1).max(256) }))
   .handler(async ({ data }) => {
-    const ok = await checkPassword(data.password);
-    if (!ok) return { ok: false as const, error: "Incorrect password" };
+    const ok = await checkCredentials(data.username, data.password);
+    if (!ok) return { ok: false as const, error: "Incorrect username or password" };
     const token = await makeSessionToken();
     setResponseHeader("Set-Cookie", buildSetCookie(token, 7 * 24 * 60 * 60));
     return { ok: true as const };
