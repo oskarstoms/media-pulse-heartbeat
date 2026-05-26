@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_app/settings")({ component: SettingsPage
 interface CfgResp {
   authed: true;
   demo: boolean;
-  servers: { id: string; name: string; glancesUrl: string | null; services: { type: string; baseUrl: string; hasApiKey: boolean }[] }[];
+  servers: { id: string; name: string; glancesUrl: string | null; services: { type: string; baseUrl: string; hasApiKey: boolean; hasCredentials: boolean }[] }[];
 }
 
 function SettingsPage() {
@@ -32,7 +32,7 @@ function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-base">Demo mode</CardTitle>
             <CardDescription>
-              No real configuration loaded. Set <code>APP_PASSWORD_HASH</code> and <code>CONFIG_JSON</code> environment variables to wire up real servers.
+              Mock data is enabled with <code>DEMO=true</code>. Mount <code>config.json</code> at <code>/app/config.json</code> for real servers.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -49,7 +49,13 @@ function SettingsPage() {
               <div key={sv.type} className="flex items-center gap-3 text-sm">
                 <span className="w-32 font-medium">{sv.type}</span>
                 <span className="flex-1 truncate text-muted-foreground">{sv.baseUrl}</span>
-                {sv.hasApiKey ? <Badge variant="outline">API key</Badge> : <Badge variant="outline" className="border-amber-500/40 text-amber-600">no key</Badge>}
+                {sv.hasApiKey ? (
+                  <Badge variant="outline">API key</Badge>
+                ) : sv.hasCredentials ? (
+                  <Badge variant="outline">credentials</Badge>
+                ) : (
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-600">no auth</Badge>
+                )}
               </div>
             ))}
           </CardContent>

@@ -19,7 +19,8 @@
         { "type": "flaresolverr", "baseUrl": "http://server-alpha:8191" },
         { "type": "portainer",    "baseUrl": "http://server-alpha:9000",  "apiKey": "REPLACE_ME" },
         { "type": "watchtower",   "baseUrl": "http://server-alpha:8081" },
-        { "type": "cloudflared",  "baseUrl": "http://server-alpha:2000" }
+        { "type": "cloudflared",  "baseUrl": "http://server-alpha:2000" },
+        { "type": "declutarr",    "baseUrl": "http://server-alpha:7352" }
       ]
     },
     {

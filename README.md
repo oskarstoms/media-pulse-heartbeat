@@ -4,7 +4,7 @@ Single-pane dashboard for two Ubuntu media servers running Sonarr, Radarr,
 Prowlarr, qBittorrent, Jellyfin, Jellyseerr, Declutarr, Flaresolverr,
 Portainer, Watchtower, and Cloudflared — talking to everything over Tailscale.
 
-Lovable preview runs in **demo mode** — log in with `admin` / `demo`.
+Set `DEMO=true` for mock data — log in with `admin` / `demo`.
 
 ---
 
@@ -43,12 +43,33 @@ docker compose up -d --build
 
 Open `http://<host-server>:3000` and log in.
 
+If `config.json` is missing or invalid, the production container now fails
+instead of silently showing fake data. Use `DEMO=true` only when you explicitly
+want the mock dashboard.
+
 ### 4. (Optional) Host metrics
 
 To show CPU / RAM / disk, run the bundled `glances` service **on each server
 you want to monitor** (it ships in `docker-compose.yml`), then set
 `glancesUrl` in `config.json` to that server's Tailscale URL, e.g.
 `http://server-bravo:61208/api/4`.
+
+Network rates are calculated after the second refresh because they need two
+Glances samples.
+
+---
+
+## What is checked
+
+- Sonarr / Radarr / Prowlarr: queue and health APIs.
+- qBittorrent: login, torrent count, active count, transfer speed.
+- Jellyfin: active sessions.
+- Jellyseerr: status API.
+- Flaresolverr: health endpoint.
+- Portainer: status and endpoint health when an API key is supplied.
+- Cloudflared: `/metrics` endpoint.
+- Watchtower / Declutarr / unknown services: basic HTTP reachability unless
+  you expose a richer endpoint and add a service fetcher.
 
 ---
 

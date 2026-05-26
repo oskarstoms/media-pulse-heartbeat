@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Cpu, HardDrive, MemoryStick, Network, ServerIcon } from "lucide-react";
+import { AlertTriangle, Boxes, Cpu, HardDrive, MemoryStick, Network, ServerIcon } from "lucide-react";
 
 import { getSnapshot } from "@/server-fns";
 import type { DashboardSnapshot, ServerSnapshot, ServiceStatus } from "@/lib/types";
@@ -104,6 +104,7 @@ function HostTiles({ host }: { host: NonNullable<ServerSnapshot["host"]> }) {
       <Tile icon={<MemoryStick className="h-3.5 w-3.5" />} label="Memory" value={`${host.memUsedGb}/${host.memTotalGb} GB`} progress={memPct} />
       <Tile icon={<HardDrive className="h-3.5 w-3.5" />} label="Uptime" value={formatUptime(host.uptimeSeconds)} />
       <Tile icon={<Network className="h-3.5 w-3.5" />} label="Network" value={`${host.net.rxMbps.toFixed(0)}↓ / ${host.net.txMbps.toFixed(0)}↑ Mbps`} />
+      <Tile icon={<Boxes className="h-3.5 w-3.5" />} label="Containers" value={`${host.containers.running}/${host.containers.total} running`} />
       <div className="col-span-2 sm:col-span-4 space-y-1">
         {host.disks.map((d) => (
           <div key={d.mount} className="flex items-center gap-2 text-xs">

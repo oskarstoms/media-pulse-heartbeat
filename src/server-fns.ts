@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { buildSnapshot } from "./server/snapshot";
 import { buildDemoLogs } from "./lib/demo-data";
+import type { LogEvent } from "./lib/types";
 import { getConfig } from "./server/config";
 import { buildSetCookie, checkCredentials, COOKIE_NAME, makeSessionToken, parseCookie, verifySessionToken } from "./server/auth";
 
@@ -29,7 +30,22 @@ export const getSnapshot = createServerFn({ method: "GET" }).handler(async () =>
 
 export const getLogs = createServerFn({ method: "GET" }).handler(async () => {
   if (!(await isAuthed())) return { authed: false as const };
-  return { authed: true as const, logs: buildDemoLogs() };
+  const cfg = getConfig();
+  if (cfg.demo) return { authed: true as const, logs: buildDemoLogs() };
+  const snap = await buildSnapshot();
+  const logs: LogEvent[] = snap.servers.flatMap((server) =>
+    server.services.flatMap((service) =>
+      service.issues.map((issue, idx) => ({
+        id: `${server.id}-${service.id}-${idx}`,
+        ts: snap.generatedAt,
+        serverId: server.id,
+        serviceId: service.id,
+        level: issue.level,
+        message: issue.message,
+      })),
+    ),
+  );
+  return { authed: true as const, logs };
 });
 
 export const getConfigPublic = createServerFn({ method: "GET" }).handler(async () => {
@@ -46,6 +62,7 @@ export const getConfigPublic = createServerFn({ method: "GET" }).handler(async (
         type: sv.type,
         baseUrl: maskUrl(sv.baseUrl),
         hasApiKey: !!sv.apiKey,
+        hasCredentials: !!sv.username || !!sv.password,
       })),
     })),
   };
