@@ -1,7 +1,7 @@
 services:
   dashboard:
-    build: .
-    container_name: homelab-dashboard
+    image: ghcr.io/oskarstoms/media-pulse-heartbeat:latest
+    container_name: media-pulse
     restart: unless-stopped
     # Host networking so the container shares the host's Tailscale interface
     # and can reach the other server via its tailnet hostname / 100.x.y.z IP.
@@ -14,12 +14,14 @@ services:
   # then point `glancesUrl` in config.json at it (e.g. http://server-alpha:61208/api/4).
   glances:
     image: nicolargo/glances:latest-full
-    container_name: glances
+    container_name: media-pulse-glances
     restart: unless-stopped
     pid: host
     network_mode: host
     privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Lets Glances report real host filesystems instead of only container mounts.
+      - /:/host:ro
     environment:
-      GLANCES_OPT: "-w"
+      GLANCES_OPT: "-w --bind 0.0.0.0 --port 61208"

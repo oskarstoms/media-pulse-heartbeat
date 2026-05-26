@@ -395,6 +395,8 @@ function isUsefulMount(mount: string): boolean {
   if (mount.startsWith("/etc/")) return false;
   if (mount.startsWith("/proc") || mount.startsWith("/sys") || mount.startsWith("/dev")) return false;
   if (mount.startsWith("/run") || mount.startsWith("/var/run")) return false;
+  if (mount === "/boot" || mount.startsWith("/boot/")) return false;
+  if (mount === "/host/boot" || mount.startsWith("/host/boot/")) return false;
   return true;
 }
 

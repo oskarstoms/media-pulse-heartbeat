@@ -38,7 +38,7 @@ Open `config.json` and fill in:
 ### 3. Start it
 
 ```bash
-docker compose up -d --build
+docker compose up -d
 ```
 
 Open `http://<host-server>:3000` and log in.
@@ -53,6 +53,10 @@ To show CPU / RAM / disk, run the bundled `glances` service **on each server
 you want to monitor** (it ships in `docker-compose.yml`), then set
 `glancesUrl` in `config.json` to that server's Tailscale URL, e.g.
 `http://server-bravo:61208/api/4`.
+
+If a server only needs to publish metrics and does not host the dashboard, add
+only the `glances` service from `docker-compose.yml` to that server's Portainer
+stack. The dashboard server can run both `dashboard` and `glances`.
 
 Network rates are calculated after the second refresh because they need two
 Glances samples.
@@ -77,7 +81,7 @@ Glances samples.
 
 Edit `config.json` and `docker compose restart dashboard`. No rebuild needed.
 
-To pull new app code: `git pull && docker compose up -d --build`.
+To pull new app code: `docker compose pull dashboard && docker compose up -d dashboard`.
 
 ---
 
