@@ -1,0 +1,31 @@
+{
+  "servers": [
+    {
+      "id": "alpha",
+      "name": "Server Alpha",
+      "glancesUrl": "http://server-alpha:61208/api/4",
+      "services": [
+        { "type": "sonarr",       "baseUrl": "http://server-alpha:8989",  "apiKey": "REPLACE_ME" },
+        { "type": "radarr",       "baseUrl": "http://server-alpha:7878",  "apiKey": "REPLACE_ME" },
+        { "type": "prowlarr",     "baseUrl": "http://server-alpha:9696",  "apiKey": "REPLACE_ME" },
+        { "type": "qbittorrent",  "baseUrl": "http://server-alpha:8080",  "username": "admin", "password": "REPLACE_ME" },
+        { "type": "jellyfin",     "baseUrl": "http://server-alpha:8096",  "apiKey": "REPLACE_ME" },
+        { "type": "jellyseerr",   "baseUrl": "http://server-alpha:5055",  "apiKey": "REPLACE_ME" },
+        { "type": "flaresolverr", "baseUrl": "http://server-alpha:8191" },
+        { "type": "portainer",    "baseUrl": "http://server-alpha:9000",  "apiKey": "REPLACE_ME" },
+        { "type": "watchtower",   "baseUrl": "http://server-alpha:8081" },
+        { "type": "cloudflared",  "baseUrl": "http://server-alpha:2000" }
+      ]
+    },
+    {
+      "id": "bravo",
+      "name": "Server Bravo",
+      "glancesUrl": "http://server-bravo:61208/api/4",
+      "services": [
+        { "type": "sonarr",   "baseUrl": "http://server-bravo:8989", "apiKey": "REPLACE_ME" },
+        { "type": "radarr",   "baseUrl": "http://server-bravo:7878", "apiKey": "REPLACE_ME" },
+        { "type": "jellyfin", "baseUrl": "http://server-bravo:8096", "apiKey": "REPLACE_ME" }
+      ]
+    }
+  ]
+}
