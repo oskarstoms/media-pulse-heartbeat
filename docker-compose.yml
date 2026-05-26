@@ -1,0 +1,28 @@
+services:
+  dashboard:
+    build: .
+    container_name: homelab-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Generate with: echo -n 'your-password' | sha256sum
+      APP_PASSWORD_HASH: "${APP_PASSWORD_HASH}"
+      SESSION_SECRET: "${SESSION_SECRET:?set a long random string}"
+      # JSON describing both servers and the services on them.
+      # See config.example.json for the shape.
+      CONFIG_JSON: "${CONFIG_JSON}"
+
+  # Run one Glances instance per host you want to monitor. Point the dashboard
+  # at it via the `glancesUrl` field in CONFIG_JSON, e.g. http://glances-a:61208/api/4
+  glances-a:
+    image: nicolargo/glances:latest-full
+    container_name: glances-a
+    restart: unless-stopped
+    pid: host
+    network_mode: host
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      GLANCES_OPT: "-w"
