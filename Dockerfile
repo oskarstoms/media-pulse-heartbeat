@@ -11,6 +11,7 @@ FROM oven/bun:1-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/src ./src
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 COPY --from=build /app/vite.config.ts ./
