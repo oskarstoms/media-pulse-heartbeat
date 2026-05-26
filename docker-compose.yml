@@ -3,21 +3,18 @@ services:
     build: .
     container_name: homelab-dashboard
     restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      # Generate with: echo -n 'your-password' | sha256sum
-      APP_PASSWORD_HASH: "${APP_PASSWORD_HASH}"
-      SESSION_SECRET: "${SESSION_SECRET:?set a long random string}"
-      # JSON describing both servers and the services on them.
-      # See config.example.json for the shape.
-      CONFIG_JSON: "${CONFIG_JSON}"
+    # Host networking so the container shares the host's Tailscale interface
+    # and can reach the other server via its tailnet hostname / 100.x.y.z IP.
+    network_mode: host
+    volumes:
+      # Edit ./config.json on the host — no rebuild needed, just restart.
+      - ./config.json:/app/config.json:ro
 
-  # Run one Glances instance per host you want to monitor. Point the dashboard
-  # at it via the `glancesUrl` field in CONFIG_JSON, e.g. http://glances-a:61208/api/4
-  glances-a:
+  # Optional: host metrics. Run this on EACH server you want CPU/RAM/disk for,
+  # then point `glancesUrl` in config.json at it (e.g. http://server-alpha:61208/api/4).
+  glances:
     image: nicolargo/glances:latest-full
-    container_name: glances-a
+    container_name: glances
     restart: unless-stopped
     pid: host
     network_mode: host
