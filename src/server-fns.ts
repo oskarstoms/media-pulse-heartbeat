@@ -5,7 +5,7 @@ import { z } from "zod";
 import { buildSnapshot } from "./server/snapshot";
 import { buildDemoLogs } from "./lib/demo-data";
 import { getConfig } from "./server/config";
-import { buildSetCookie, checkPassword, COOKIE_NAME, makeSessionToken, parseCookie, verifySessionToken } from "./server/auth";
+import { buildSetCookie, checkCredentials, COOKIE_NAME, makeSessionToken, parseCookie, verifySessionToken } from "./server/auth";
 
 async function isAuthed(): Promise<boolean> {
   const cfg = getConfig();
