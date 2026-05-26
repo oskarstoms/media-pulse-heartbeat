@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Activity } from "lucide-react";
 
-import { getAuthState, login } from "@/server/api";
+import { getAuthState, login } from "@/server-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
