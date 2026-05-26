@@ -1,7 +1,10 @@
 /// <reference types="node" />
-// Server-only config loader. Reads env vars at startup. If APP_PASSWORD_HASH
-// is not set, the dashboard runs in DEMO mode with mock data and a default
-// password of "demo".
+// Server-only config loader.
+//
+// Single source of truth: a JSON file at CONFIG_PATH (default /app/config.json).
+// Contains auth (username + sha256 password hash) and the list of servers /
+// services to monitor. If the file is missing or unreadable, the dashboard
+// runs in DEMO mode (login admin / demo, mocked data).
 
 export interface ServiceCfg {
   type: string;
@@ -27,49 +30,66 @@ export interface AppConfig {
   servers: ServerCfg[];
 }
 
+interface ConfigFile {
+  auth: {
+    username: string;
+    /** sha256 hex of the password */
+    passwordHash: string;
+    /** Long random string used to sign session cookies. */
+    sessionSecret: string;
+  };
+  servers: ServerCfg[];
+}
+
+const DEMO: AppConfig = {
+  demo: true,
+  username: "admin",
+  // sha256("demo")
+  passwordHash: "2a97516c354b68848cdbd8f54a226a0a55b21ed138e207ad6c5cbb9c00aa5aea",
+  sessionSecret: "lovable-homelab-demo-secret",
+  servers: [
+    { id: "alpha", name: "Server Alpha", services: [] },
+    { id: "bravo", name: "Server Bravo", services: [] },
+  ],
+};
+
 function getEnv(key: string): string | undefined {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const env = (globalThis as any).process?.env as Record<string, string | undefined> | undefined;
   return env?.[key];
 }
 
-/**
- * Returns the active config. In real deployment, mount /app/config.json into
- * the container and set CONFIG_PATH; we read JSON for simplicity.
- *
- * For the Lovable preview (and any unconfigured run), we ship demo mode.
- */
 let cached: AppConfig | undefined;
 export function getConfig(): AppConfig {
   if (cached) return cached;
 
-  const passwordHash = getEnv("APP_PASSWORD_HASH");
-  const username = getEnv("APP_USERNAME") ?? "admin";
-  const sessionSecret = getEnv("SESSION_SECRET") ?? "lovable-homelab-dev-secret-change-me";
-  const configJson = getEnv("CONFIG_JSON");
+  const path = getEnv("CONFIG_PATH") ?? "/app/config.json";
 
-  if (!passwordHash || !configJson) {
-    // Demo mode: default credentials are admin / demo
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+    const fs = require("node:fs") as typeof import("node:fs");
+    if (!fs.existsSync(path)) {
+      cached = DEMO;
+      return cached;
+    }
+    const raw = fs.readFileSync(path, "utf8");
+    const parsed = JSON.parse(raw) as ConfigFile;
+    if (!parsed?.auth?.username || !parsed?.auth?.passwordHash) {
+      console.warn(`[config] ${path} is missing auth.username or auth.passwordHash — falling back to demo mode`);
+      cached = DEMO;
+      return cached;
+    }
     cached = {
-      demo: true,
-      username: "admin",
-      passwordHash: "2a97516c354b68848cdbd8f54a226a0a55b21ed138e207ad6c5cbb9c00aa5aea",
-      sessionSecret,
-      servers: [
-        { id: "alpha", name: "Server Alpha", services: [] },
-        { id: "bravo", name: "Server Bravo", services: [] },
-      ],
+      demo: false,
+      username: parsed.auth.username,
+      passwordHash: parsed.auth.passwordHash,
+      sessionSecret: parsed.auth.sessionSecret || "change-me-please",
+      servers: parsed.servers ?? [],
     };
     return cached;
+  } catch (err) {
+    console.warn(`[config] failed to load config from ${path}, using demo mode:`, err);
+    cached = DEMO;
+    return cached;
   }
-
-  const parsed = JSON.parse(configJson) as { servers: ServerCfg[] };
-  cached = {
-    demo: false,
-    username,
-    passwordHash,
-    sessionSecret,
-    servers: parsed.servers ?? [],
-  };
-  return cached;
 }

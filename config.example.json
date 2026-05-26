@@ -1,4 +1,9 @@
 {
+  "auth": {
+    "username": "admin",
+    "passwordHash": "REPLACE_WITH_SHA256_OF_YOUR_PASSWORD",
+    "sessionSecret": "REPLACE_WITH_LONG_RANDOM_STRING"
+  },
   "servers": [
     {
       "id": "alpha",
